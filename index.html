@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ESPHome Конструктор v11 – 2026</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  
+  <style>
+    :root {
+      --primary: #60a5fa;
+      --primary-dark: #3b82f6;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --gray: #94a3b8;
+      --border: #334155;
+      --danger: #f87171;
+      --success: #34d399;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      min-height: 100vh;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { text-align: center; color: var(--primary); margin: 24px 0 8px; font-size: 2.4rem; text-shadow: 0 2px 10px rgba(59,130,246,0.3); }
+    h2 { color: #cbd5e1; margin: 32px 0 16px; font-size: 1.6rem; }
+    .subtitle { text-align: center; color: var(--gray); margin-bottom: 40px; font-size: 1.2rem; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      padding: 24px;
+      margin-bottom: 32px;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); }
+    label { display: block; margin: 16px 0 8px; font-weight: 500; font-size: 1.1rem; color: #cbd5e1; }
+    input, select, textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1.05rem;
+      background: #0f172a;
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+    }
+    .actions {
+      text-align: center;
+      margin: 40px 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    button {
+      padding: 16px 40px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      min-width: 220px;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    .btn-flash { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(59,130,246,0.4); }
+    .btn-secondary { background: #475569; color: white; }
+    pre {
+      background: #020617;
+      color: #c7d2fe;
+      padding: 24px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 0.95rem;
+      margin-top: 20px;
+      border: 1px solid #334155;
+    }
+    .assigned-item {
+      background: #334155;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      border-left: 4px solid var(--primary);
+    }
+    .remove-btn {
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+    @media (max-width: 768px) {
+      button { min-width: 100%; padding: 18px; }
+      .actions { flex-direction: column; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>ESPHome Конструктор v11</h1>
+  <h2 style="text-align:center; color:#94a3b8;">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</h2>
+  
+
+  <div class="card">
+    <h2>Основные настройки</h2>
+    <label>Имя устройства</label>
+    <input type="text" id="devName" value="cicada3301" />
+
+    <label>Плата</label>
+    <select id="board" onchange="updatePins()">
+      <option value="nodemcuv2" selected>NodeMCU v2 (ESP8266)</option>
+      <option value="d1_mini">Wemos D1 mini</option>
+      <option value="esp32dev" data-esp32="true">ESP32 DevKit</option>
+    </select>
+
+    <label>Wi-Fi SSID</label>
+    <input type="text" id="ssid" value="MyWiFi" />
+
+    <label>Wi-Fi Пароль</label>
+    <input type="password" id="wifiPass" value="88888888" />
+
+    <label>Пароль OTA</label>
+    <input type="text" id="otaPass" value="cicada" />
+  </div>
+
+  <div class="card">
+    <h2>Telegram-бот</h2>
+    <label>Токен бота</label>
+    <input type="text" id="tgToken" value="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" />
+
+    <label>Chat ID (можно несколько через запятую)</label>
+    <input type="text" id="tgChatId" value="123456789,-1009876543210" />
+  </div>
+
+  <div class="card">
+    <h2>Добавить датчик</h2>
+    <label>Тип датчика</label>
+    <select id="compType"></select>
+
+    <label>Пин</label>
+    <select id="pinSelect"></select>
+
+    <button class="btn-primary" onclick="addComponent()" style="margin-top:20px; width:100%;">Добавить</button>
+  </div>
+
+  <div class="card">
+    <h2>Назначенные датчики</h2>
+    <div id="assigned"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" onclick="generate()">Сгенерировать YAML</button>
+    <button class="btn-secondary" onclick="download()">Скачать YAML</button>
+    <button id="flashBtn" class="btn-flash" onclick="flashBoard()">Прошить через браузер</button>
+  </div>
+
+  <div class="card" id="yamlCard" style="display:none;">
+    <h2>Готовый YAML</h2>
+    <pre><code id="yaml" class="language-yaml"></code></pre>
+  </div>
+</div>
+
+<script>
+// Датчики ESPHome
+const components = [
+  {name:"Реле / Выключатель", type:"relay", icon:"power-socket-eu"},
+  {name:"MQ-4 Метан (ADC)", type:"mq4", icon:"gas-cylinder"},
+  {name:"MQ-135 Воздух (ADC)", type:"mq135", icon:"air-filter"},
+  {name:"DHT22 Темп+Влажность", type:"dht22", icon:"home-thermometer"},
+  {name:"BME280 Темп+Вл+Давление", type:"bme280", icon:"weather-partly-snowy"},
+  {name:"BMP280 Давление+Темп", type:"bmp280", icon:"gauge"},
+  {name:"DS18B20 Температура", type:"ds18b20", icon:"thermometer"},
+  {name:"BH1750 Освещенность", type:"bh1750", icon:"white-balance-sunny"},
+  {name:"SCD40/SCD41 CO₂", type:"scd4x", icon:"molecule-co2"},
+  {name:"MH-Z19 CO₂", type:"mhz19", icon:"molecule-co2"},
+  {name:"PMSx003 PM2.5/PM10", type:"pmsx003", icon:"weather-dust"},
+  {name:"PIR Движение", type:"pir", icon:"walk"},
+  {name:"Кнопка", type:"button", icon:"gesture-tap"},
+  {name:"Влажность почвы", type:"soil", icon:"water"},
+  {name:"HC-SR04 Расстояние", type:"ultrasonic", icon:"ruler"},
+  {name:"LED PWM (димер)", type:"pwmled", icon:"lightbulb-outline"},
+  {name:"WS2812B Адресная лента", type:"ws2812", icon:"led-strip"},
+  {name:"INA219 Ток+Напряжение", type:"ina219", icon:"current-ac"},
+  {name:"Дверной/магнитный", type:"door", icon:"door"},
+  {name:"Вибрация / Наклон", type:"vibration", icon:"vibrate"},
+  {name:"MAX30102 Пульс + SpO2", type:"max30102", icon:"heart-pulse"},
+  {name:"VL53L0X Расстояние (ToF)", type:"vl53l0x", icon:"ruler"},
+  {name:"SHT3x Темп+Влажность", type:"sht3x", icon:"water-percent"},
+  {name:"CCS811 VOC + eCO2", type:"ccs811", icon:"air-filter"},
+  {name:"HDC2010 Темп+Влажность", type:"hdc2010", icon:"thermometer-lines"},
+  {name:"MCP3221 ADC", type:"mcp3221", icon:"current-dc"},
+  {name:"AQI с PM", type:"aqi", icon:"air-quality"}
+];
+
+let assigned = [];
+let currentPins = [];
+
+const compSelect = document.getElementById("compType");
+components.forEach(c => {
+  const opt = document.createElement("option");
+  opt.value = c.type;
+  opt.innerHTML = `<span class="mdi mdi-${c.icon}"></span> ${c.name}`;
+  compSelect.add(opt);
+});
+
+const pinMapping = {
+  "GPIO0":  "GPIO0 (D3)",
+  "GPIO2":  "GPIO2 (D4)",
+  "GPIO4":  "GPIO4 (D2)",
+  "GPIO5":  "GPIO5 (D1)",
+  "GPIO12": "GPIO12 (D6)",
+  "GPIO13": "GPIO13 (D7)",
+  "GPIO14": "GPIO14 (D5)",
+  "GPIO15": "GPIO15 (D8)",
+  "GPIO16": "GPIO16 (D0)",
+  "GPIO17": "GPIO17 (A0)"
+};
+
+function updatePins() {
+  const board = document.getElementById("board").value;
+  const isESP32 = document.querySelector(`#board option[value="${board}"]`).dataset.esp32 === "true";
+
+  let raw = isESP32
+    ? ["GPIO4","GPIO5","GPIO18","GPIO19","GPIO21","GPIO22","GPIO23","GPIO25","GPIO26","GPIO27","GPIO32","GPIO33","GPIO34","GPIO35","GPIO36","GPIO39"]
+    : ["GPIO0","GPIO2","GPIO4","GPIO5","GPIO12","GPIO13","GPIO14","GPIO15","GPIO16","GPIO17"];
+
+  currentPins = raw.map(g => ({
+    gpio: g,
+    display: isESP32 ? g : (pinMapping[g] || g)
+  }));
+
+  refreshPinDropdown();
+}
+
+function refreshPinDropdown() {
+  const sel = document.getElementById("pinSelect");
+  sel.innerHTML = "";
+  currentPins.filter(p => !assigned.some(a => a.pin === p.gpio)).forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.gpio;
+    opt.textContent = p.display;
+    sel.add(opt);
+  });
+}
+
+updatePins();
+
+function addComponent() {
+  const type = document.getElementById("compType").value;
+  const opt = document.getElementById("pinSelect").selectedOptions[0];
+  if (!opt) return alert("Выберите пин!");
+
+  const gpio = opt.value;
+  const display = opt.textContent;
+  const name = components.find(c => c.type === type).name;
+
+  assigned.push({name, type, pin: gpio, display});
+  renderAssigned();
+  refreshPinDropdown();
+}
+
+function renderAssigned() {
+  const cont = document.getElementById("assigned");
+  cont.innerHTML = "";
+  assigned.forEach((item, i) => {
+    const div = document.createElement("div");
+    div.className = "assigned-item";
+    div.innerHTML = `${item.name} → ${item.display} <button class="remove-btn" onclick="removeComp(${i})">×</button>`;
+    cont.appendChild(div);
+  });
+}
+
+function removeComp(i) {
+  assigned.splice(i, 1);
+  renderAssigned();
+  refreshPinDropdown();
+}
+
+function generate() {
+  const name = document.getElementById("devName").value.trim() || "cicada3301";
+  const board = document.getElementById("board").value;
+  const isESP32 = document.querySelector(`#board option[value="${board}"]`).dataset.esp32 === "true";
+  const ssid = document.getElementById("ssid").value;
+  const pass = document.getElementById("wifiPass").value;
+  const otaPass = document.getElementById("otaPass").value.trim();
+  const tgToken = document.getElementById("tgToken").value.trim();
+  const tgChatId = document.getElementById("tgChatId").value.trim();
+
+  let yaml = `esphome:
+  name: ${name}
+  friendly_name: ${name}
+
+${isESP32 ? "esp32:" : "esp8266:"}
+  board: ${board}
+
+wifi:
+  ssid: "${ssid}"
+  password: "${pass}"
+  min_auth_mode: WPA2
+
+  ap:
+    ssid: "${name} Fallback"
+    password: "88888888"
+
+logger:
+api:
+ota:
+  - platform: esphome
+    password: "${otaPass || 'ota123'}"
+
+web_server:
+  port: 80
+`;
+
+  if (tgToken && tgChatId) {
+    yaml += `\nhttp_request:
+  useragent: esphome-device
+  timeout: 10s
+  verify_ssl: false
+
+substitutions:
+  tg_token: "${tgToken}"
+  tg_chat: "${tgChatId.split(',')[0].trim()}"   # берём первый chat_id; для нескольких нужно доработать
+`;
+  }
+
+  assigned.forEach(c => {
+    const p = c.pin;
+    switch(c.type) {
+      case "relay":
+        yaml += `\nswitch:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n`;
+        break;
+
+      case "door":
+        yaml += `\nbinary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: door\n`;
+        if (tgToken && tgChatId) {
+          yaml += `    on_press:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "Дверь/окно открыто! ${c.name}"\n              disable_notification: "false"\n`;
+          yaml += `    on_release:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "${c.name} закрыт"\n              disable_notification: "true"\n`;
+        }
+        break;
+
+      case "water_leak":
+        yaml += `\nbinary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: moisture\n`;
+        if (tgToken && tgChatId) {
+          yaml += `    on_press:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "УТЕЧКА ВОДЫ! ${c.name} сработал!"\n              disable_notification: "false"\n`;
+        }
+        break;
+
+      case "mq2":
+      case "mq4":
+      case "mq135":
+        yaml += `\nsensor:\n  - platform: adc\n    pin: ${p}\n    name: "${c.name}"\n    update_interval: 10s\n`;
+        if (tgToken && tgChatId) {
+          yaml += `    on_value:\n      condition:\n        lambda: 'return x > 1.5;'\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: !lambda 'return "Тревога! Газ превышен: " + std::to_string(x) + " В (${c.name})";'\n              disable_notification: "false"\n`;
+        }
+        break;
+
+      case "pir":
+        yaml += `\nbinary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "Движение"\n    device_class: motion\n`;
+        if (tgToken && tgChatId) {
+          yaml += `    on_press:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "Движение обнаружено! ${c.name}"\n              disable_notification: "false"\n`;
+        }
+        break;
+
+      // другие типы — можно добавить аналогично
+    }
+  });
+
+  const code = document.getElementById("yaml");
+  code.textContent = yaml;
+  document.getElementById("yamlCard").style.display = "block";
+  Prism.highlightElement(code);
+}
+
+function flashBoard() {
+  const yamlText = document.getElementById("yaml").textContent;
+  if (!yamlText) {
+    alert("Сначала сгенерируйте YAML!");
+    return;
+  }
+
+  window.open("https://web.esphome.io/", "_blank");
+  alert("Открыт веб-флешер ESPHome.\n\n1. Подключите плату по USB\n2. Нажмите «Connect»\n3. Выберите устройство\n4. Вставьте сгенерированный YAML в редактор\n5. Нажмите «Install»");
+}
+
+function download() {
+  const yaml = document.getElementById("yaml").textContent;
+  if (!yaml) return alert("Сначала сгенерируйте YAML");
+  const blob = new Blob([yaml], {type:"text/yaml"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (document.getElementById("devName").value || "cicada3301") + ".yaml";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</body>
+</html>
