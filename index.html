@@ -54,6 +54,10 @@
       color: var(--text);
       box-sizing: border-box;
     }
+    input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
     input:focus, select:focus, textarea:focus {
       border-color: var(--primary);
       outline: none;
@@ -111,6 +115,7 @@
       cursor: pointer;
       font-size: 20px;
     }
+    #mqttFields { display: none; }
     @media (max-width: 768px) {
       button { min-width: 100%; padding: 18px; }
       .actions { flex-direction: column; gap: 16px; }
@@ -122,12 +127,12 @@
 <div class="container">
   <h1>ESPHome Конструктор v11</h1>
   <h2 style="text-align:center; color:#94a3b8;">꧁༺𝓒𝓲𝓬𝓪𝓭𝓪3301༻꧂</h2>
-  
+  <p class="subtitle">Датчики 27 шт</p>
 
   <div class="card">
     <h2>Основные настройки</h2>
-    <label>Имя устройства</label>
-    <input type="text" id="devName" value="cicada3301" />
+    <label>Имя устройства (маленькими буквами, без пробелов) *</label>
+    <input type="text" id="devName" value="" />
 
     <label>Плата</label>
     <select id="board" onchange="updatePins()">
@@ -136,23 +141,33 @@
       <option value="esp32dev" data-esp32="true">ESP32 DevKit</option>
     </select>
 
-    <label>Wi-Fi SSID</label>
-    <input type="text" id="ssid" value="MyWiFi" />
+    <label>Wi-Fi SSID *</label>
+    <input type="text" id="ssid" value="" />
 
-    <label>Wi-Fi Пароль</label>
-    <input type="password" id="wifiPass" value="88888888" />
+    <label>Wi-Fi Пароль *</label>
+    <input type="password" id="wifiPass" value="" />
 
-    <label>Пароль OTA</label>
-    <input type="text" id="otaPass" value="cicada" />
-  </div>
+    <label>Пароль OTA *</label>
+    <input type="text" id="otaPass" value="" />
 
-  <div class="card">
-    <h2>Telegram-бот</h2>
-    <label>Токен бота</label>
-    <input type="text" id="tgToken" value="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" />
+    <label style="margin-top: 20px; display: flex; align-items: center; cursor: pointer;">
+      <input type="checkbox" id="useMqtt" onchange="toggleMqttFields()">
+      Использовать MQTT (Home Assistant, Node-RED и т.д.)
+    </label>
 
-    <label>Chat ID (можно несколько через запятую)</label>
-    <input type="text" id="tgChatId" value="123456789,-1009876543210" />
+    <div id="mqttFields">
+      <label>MQTT Host (IP или домен брокера) *</label>
+      <input type="text" id="mqttHost" value="" placeholder="192.168.1.100 или broker.hivemq.com" />
+
+      <label>MQTT Порт (обычно 1883)</label>
+      <input type="text" id="mqttPort" value="1883" />
+
+      <label>MQTT Логин *</label>
+      <input type="text" id="mqttUsername" value="" />
+
+      <label>MQTT Пароль *</label>
+      <input type="password" id="mqttPassword" value="" />
+    </div>
   </div>
 
   <div class="card">
@@ -184,7 +199,14 @@
 </div>
 
 <script>
-// Датчики ESPHome
+// Показать/скрыть поля MQTT
+function toggleMqttFields() {
+  const useMqtt = document.getElementById("useMqtt");
+  const mqttFields = document.getElementById("mqttFields");
+  mqttFields.style.display = useMqtt.checked ? "block" : "none";
+}
+
+// Список датчиков
 const components = [
   {name:"Реле / Выключатель", type:"relay", icon:"power-socket-eu"},
   {name:"MQ-4 Метан (ADC)", type:"mq4", icon:"gas-cylinder"},
@@ -299,15 +321,46 @@ function removeComp(i) {
   refreshPinDropdown();
 }
 
+function generateApiKey() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array));
+}
+
 function generate() {
-  const name = document.getElementById("devName").value.trim() || "cicada3301";
+  const devName     = document.getElementById("devName").value.trim();
+  const ssid        = document.getElementById("ssid").value.trim();
+  const wifiPass    = document.getElementById("wifiPass").value.trim();
+  const otaPass     = document.getElementById("otaPass").value.trim();
+  const useMqtt     = document.getElementById("useMqtt").checked;
+  const mqttHost    = document.getElementById("mqttHost").value.trim();
+  const mqttPort    = document.getElementById("mqttPort").value.trim() || "1883";
+  const mqttUser    = document.getElementById("mqttUsername").value.trim();
+  const mqttPass    = document.getElementById("mqttPassword").value.trim();
+
+  let errorMsg = "";
+
+  if (!devName)    errorMsg += "• Имя устройства не заполнено\n";
+  if (!ssid)       errorMsg += "• Wi-Fi SSID не заполнен\n";
+  if (!wifiPass)   errorMsg += "• Wi-Fi пароль не заполнен\n";
+  if (!otaPass)    errorMsg += "• Пароль OTA не заполнен\n";
+
+  if (useMqtt) {
+    if (!mqttHost) errorMsg += "• MQTT Host не заполнен\n";
+    if (!mqttUser) errorMsg += "• MQTT Логин не заполнен\n";
+    if (!mqttPass) errorMsg += "• MQTT Пароль не заполнен\n";
+  }
+
+  if (errorMsg) {
+    alert("Не все обязательные поля заполнены!\n\n" + errorMsg);
+    return;
+  }
+
+  const name = devName;
   const board = document.getElementById("board").value;
   const isESP32 = document.querySelector(`#board option[value="${board}"]`).dataset.esp32 === "true";
-  const ssid = document.getElementById("ssid").value;
-  const pass = document.getElementById("wifiPass").value;
-  const otaPass = document.getElementById("otaPass").value.trim();
-  const tgToken = document.getElementById("tgToken").value.trim();
-  const tgChatId = document.getElementById("tgChatId").value.trim();
+
+  const apiEncryptionKey = generateApiKey();
 
   let yaml = `esphome:
   name: ${name}
@@ -318,7 +371,7 @@ ${isESP32 ? "esp32:" : "esp8266:"}
 
 wifi:
   ssid: "${ssid}"
-  password: "${pass}"
+  password: "${wifiPass}"
   min_auth_mode: WPA2
 
   ap:
@@ -327,65 +380,68 @@ wifi:
 
 logger:
 api:
+  encryption:
+    key: "${apiEncryptionKey}"
 ota:
   - platform: esphome
-    password: "${otaPass || 'ota123'}"
+    password: "${otaPass}"
 
 web_server:
   port: 80
 `;
 
-  if (tgToken && tgChatId) {
-    yaml += `\nhttp_request:
-  useragent: esphome-device
-  timeout: 10s
-  verify_ssl: false
-
-substitutions:
-  tg_token: "${tgToken}"
-  tg_chat: "${tgChatId.split(',')[0].trim()}"   # берём первый chat_id; для нескольких нужно доработать
+  if (useMqtt) {
+    yaml += `
+mqtt:
+  broker: ${mqttHost}
+  port: ${mqttPort}
+  username: "${mqttUser}"
+  password: "${mqttPass}"
+  id: mqtt_client
+  discovery: true
 `;
   }
 
+  // Добавляем все датчики из assigned
   assigned.forEach(c => {
     const p = c.pin;
+    let section = '';
+
     switch(c.type) {
       case "relay":
-        yaml += `\nswitch:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n`;
+        section = `switch:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n`;
         break;
 
       case "door":
-        yaml += `\nbinary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: door\n`;
-        if (tgToken && tgChatId) {
-          yaml += `    on_press:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "Дверь/окно открыто! ${c.name}"\n              disable_notification: "false"\n`;
-          yaml += `    on_release:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "${c.name} закрыт"\n              disable_notification: "true"\n`;
-        }
+        section = `binary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: door\n`;
         break;
 
       case "water_leak":
-        yaml += `\nbinary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: moisture\n`;
-        if (tgToken && tgChatId) {
-          yaml += `    on_press:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "УТЕЧКА ВОДЫ! ${c.name} сработал!"\n              disable_notification: "false"\n`;
-        }
+        section = `binary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: moisture\n`;
+        break;
+
+      case "button":
+        section = `binary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: power\n`;
+        break;
+
+      case "pir":
+        section = `binary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "${c.name}"\n    device_class: motion\n`;
         break;
 
       case "mq2":
       case "mq4":
       case "mq135":
-        yaml += `\nsensor:\n  - platform: adc\n    pin: ${p}\n    name: "${c.name}"\n    update_interval: 10s\n`;
-        if (tgToken && tgChatId) {
-          yaml += `    on_value:\n      condition:\n        lambda: 'return x > 1.5;'\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: !lambda 'return "Тревога! Газ превышен: " + std::to_string(x) + " В (${c.name})";'\n              disable_notification: "false"\n`;
-        }
+        section = `sensor:\n  - platform: adc\n    pin: ${p}\n    name: "${c.name}"\n    update_interval: 10s\n`;
         break;
 
-      case "pir":
-        yaml += `\nbinary_sensor:\n  - platform: gpio\n    pin: ${p}\n    name: "Движение"\n    device_class: motion\n`;
-        if (tgToken && tgChatId) {
-          yaml += `    on_press:\n      then:\n        - http_request.post:\n            url: "https://api.telegram.org/bot{{ substitutions.tg_token }}/sendMessage"\n            request_headers:\n              Content-Type: application/json\n            json:\n              chat_id: "{{ substitutions.tg_chat }}"\n              text: "Движение обнаружено! ${c.name}"\n              disable_notification: "false"\n`;
-        }
+      default:
+        // Для всех остальных — sensor с платформой по типу
+        section = `sensor:\n  - platform: ${c.type}\n    name: "${c.name}"\n`;
         break;
+    }
 
-      // другие типы — можно добавить аналогично
+    if (section) {
+      yaml += `\n${section}`;
     }
   });
 
@@ -413,7 +469,7 @@ function download() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = (document.getElementById("devName").value || "cicada3301") + ".yaml";
+  a.download = (document.getElementById("devName").value.trim() || "device") + ".yaml";
   a.click();
   URL.revokeObjectURL(url);
 }
