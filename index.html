@@ -712,7 +712,7 @@
     }
   </style>
 </head>
-<body>
+<body data-theme="dark">
 
 <div class="container">
   <div class="topbar">
@@ -1957,7 +1957,7 @@ document.addEventListener("keydown", (event) => {
 
 document.getElementById("pluginPinCount").disabled = document.getElementById("pluginNeedsPin").value !== "yes";
 
-applyTheme(localStorage.getItem("esphomeTheme") || "light");
+applyTheme(localStorage.getItem("esphomeTheme") || "dark");
 toggleOtaFields();
 sanitizeDeviceName();
 
